@@ -59,8 +59,9 @@ class wheel extends THREE.Object3D {
             segments
         );
 
-        this.material = new THREE.MeshPhongMaterial({
-            color: color
+        this.material = new THREE.MeshStandardMaterial({
+            color: color,
+            wireframe: true
         });
 
         this.mesh = new THREE.Mesh(
@@ -80,23 +81,23 @@ class wheel extends THREE.Object3D {
         this.rotation.z += speed;
     }
 
-    // 複製時に車輪が二重にならないようにする
-    clone() {
-        const cloned = new wheel(
-            this.radius,
-            this.width,
-            this.segments,
-            this.color,
-            this.position.x,
-            this.position.y,
-            this.position.z
-        );
+// 複製時の処理
+clone() {
+    const cloned = new wheel(
+        this.radius,
+        this.width,
+        this.segments,
+        this.color,
+        this.position.x,
+        this.position.y,
+        this.position.z
+    );
 
-        cloned.rotation.copy(this.rotation);
-        cloned.scale.copy(this.scale);
+    cloned.rotation.copy(this.rotation);
+    cloned.scale.copy(this.scale);
 
-        return cloned;
-    }
+    return cloned;
+}
 }
 
 // ==============================
@@ -110,29 +111,15 @@ scene.add(pivot);
 // ==============================
 const train = new THREE.Group();
 
-// 車体（横向きの円柱）
-const bodyGeometry = new THREE.CylinderGeometry(
-    0.7,  // 上面の半径
-    0.7,  // 底面の半径
-    3,    // 長さ
-    32    // 円周の分割数
-);
-
+// 車体
+const bodyGeometry = new THREE.BoxGeometry(3, 0.8, 1.2);
 const bodyMaterial = new THREE.MeshPhongMaterial({
     color: 0x159447
 });
-
-const body = new THREE.Mesh(
-    bodyGeometry,
-    bodyMaterial
-);
-
-// 円柱を横向きにする
-body.rotation.z = Math.PI / 2;
-
+const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
 body.position.set(0, 1, 0);
-
 train.add(body);
+
 // 運転席
 const cabinGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.1);
 const cabinMaterial = new THREE.MeshPhongMaterial({
@@ -279,17 +266,22 @@ for (let i = 0; i < 5; i++) {
 function animate() {
     requestAnimationFrame(animate);
 
-    // 車輪を自転
-    wheelBig1.rotateWheel(0.02);
-    wheelBig2.rotateWheel(0.02);
+    // 5つのToy Trainをそれぞれ自転
+    trains.forEach((train) => {
 
-    wheelSmall1.rotateWheel(0.02);
-    wheelSmall2.rotateWheel(0.02);
-    wheelSmall3.rotateWheel(0.02);
-    wheelSmall4.rotateWheel(0.02);
+        // Toy Train全体の水平回転
+        train.rotation.y -= 0.01;
 
-    // 煙突側の前部分を中心に水平回転
-    pivot.rotation.y += 0.01;
+        // それぞれの車輪を自転
+        train.children.forEach((child) => {
+
+            if (child instanceof wheel) {
+                child.rotateWheel(0.05);
+            }
+
+        });
+
+    });
 
     controls.update();
     renderer.render(scene, camera);
